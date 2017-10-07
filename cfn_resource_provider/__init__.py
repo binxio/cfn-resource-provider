@@ -1,0 +1,3 @@
+import resource_provider
+
+ResourceProvider = resource_provider.ResourceProvider
