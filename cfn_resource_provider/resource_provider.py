@@ -1,7 +1,6 @@
 from __future__ import generators
 import os
 import requests
-import boto3
 import logging
 import json
 import jsonschema
@@ -13,7 +12,7 @@ log = logging.getLogger()
 
 class ResourceProvider(object):
     """
-    Custom CloudFormation Resource Provider.
+    Custom CloudFormation Resource Provider. Just
     """
 
     def __init__(self):
@@ -23,9 +22,6 @@ class ResourceProvider(object):
         self.request = None
         self.response = None
         self.context = None
-        self.region = boto3.session.Session().region_name
-        self.account_id = (boto3.client(
-            'sts')).get_caller_identity()['Account']
         """
         default json schema for request['ResourceProperties']. Override in your subclass.
         """

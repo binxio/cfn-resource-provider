@@ -49,12 +49,6 @@ def test_is_valid_cfn_response():
     assert provider.physical_resource_id
 
 
-def test_init():
-    provider = ResourceProvider()
-    assert provider.region is not None
-    assert provider.account_id is not None
-
-
 def test_custom_cfn_resource_name():
     provider = ResourceProvider()
     assert provider.custom_cfn_resource_name == 'Custom::Resource'

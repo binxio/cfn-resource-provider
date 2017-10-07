@@ -43,7 +43,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=['boto3', 'requests',  'jsonschema'],
+    install_requires=['requests',  'jsonschema'],
     tests_requires=['pytest'],
     cmdclass={'test': PyTest},
     tests_require=['pytest'],
