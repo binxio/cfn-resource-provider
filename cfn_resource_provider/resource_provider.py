@@ -153,6 +153,15 @@ class ResourceProvider(object):
             log.warn('invalid CloudFormation response created: %s', str(e))
             return False
 
+    def convert_property_types(self):
+	"""
+	allows you to coerce the values in properties to be the type expected. Stupid CFN sends all values as Strings..
+	it is called before the json schema validation takes place.
+
+	one day we will make it a generic method, not now...
+	"""
+	pass
+
     def is_valid_request(self):
         """
         returns true if `self.properties` is a valid request as specified by the JSON schema self.request_schema, otherwise False.
@@ -160,6 +169,7 @@ class ResourceProvider(object):
         If false, self.reason and self.status are set.
         """
         try:
+	    self.convert_property_types()
             default_injecting_validator.validate(self.properties, self.request_schema)
             return True
         except jsonschema.ValidationError as e:
