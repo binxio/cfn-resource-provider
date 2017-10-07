@@ -44,7 +44,7 @@ class ResourceProvider(object):
             'StackId': request['StackId'],
             'RequestId': request['RequestId'],
             'LogicalResourceId': request['LogicalResourceId'],
-            'PhysicalResourceId': request['PhysicalResourceId'],
+            'PhysicalResourceId': request['PhysicalResourceId'] if 'PhysicalResourceId' in request else None,
             'Data': {}
         }
 
@@ -163,7 +163,7 @@ class ResourceProvider(object):
             default_injecting_validator.validate(self.properties, self.request_schema)
             return True
         except jsonschema.ValidationError as e:
-            log.fail('invalid resource properties: %s' % str(e))
+            log.error('invalid resource properties: %s' % str(e))
             return False
 
     def set_attribute(self, name, value):
@@ -285,7 +285,7 @@ class ResourceProvider(object):
     cfn_request_schema = {
         "type": "object",
         "required": ["RequestType", "ResponseURL", "StackId", "RequestId", "ResourceType",
-                     "LogicalResourceId", "PhysicalResourceId", "ResourceProperties"],
+                     "LogicalResourceId", "ResourceProperties"],
         "properties": {
             "RequestType": {"type": "string", "enum": ["Create", "Update", "Delete"]},
             "ResponseURL": {"type": "string", "format": "uri", "pattern": "^https?://"},
