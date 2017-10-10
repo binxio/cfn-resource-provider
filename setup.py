@@ -34,7 +34,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 setup(
-    name="cfn_resource_provider",
+    name="cfn-resource-provider",
     packages=["cfn_resource_provider"],
     entry_points={},
     version=version,
@@ -49,5 +49,5 @@ setup(
     tests_require=['pytest'],
     author="Mark van Holsteijn",
     author_email="markvanholsteijn@binx.io",
-    url="https://github.com/mvanholsteijn/cfn_resource_provider",
+    url="https://github.com/binxio/cfn-resource-provider",
 )
