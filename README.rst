@@ -74,4 +74,17 @@ Finally, at the end of your module implement the AWS Lambda handle function::
         provider.handle(request, context)
 
 
+**Processing boolean and integer properties**
 
+AWS CloudFormation passes all properties in  string format, eg 'true', 'false', '123'. This does not go down well with the json schema validator. Therefore, before the validator is called, it calls the method `convert_property_types`. Use this method to do the conversion of the non string properties::
+
+   def convert_property_types(self):
+        try:
+            if 'Length' in self.properties and isinstance(self.properties['Length'], (str, unicode,)):
+                self.properties['Length'] = int(self.properties['Length'])
+            if 'ReturnSecret' in self.properties and isinstance(self.properties['ReturnSecret'], (str, unicode,)):
+                self.properties['ReturnSecret'] = (self.properties['ReturnSecret'] == 'true')
+        except ValueError as e:
+            log.error('failed to convert property types %s', e)
+
+it is ok if you cannot convert the values: the validator will report the error for you :-) If I find out how, I will do a generic implementation based on your json schema.
