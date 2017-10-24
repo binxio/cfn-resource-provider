@@ -199,7 +199,7 @@ class ResourceProvider(object):
             default_injecting_validator.validate(self.properties, self.request_schema)
             return True
         except jsonschema.ValidationError as e:
-            log.error('invalid resource properties: %s' % str(e))
+            self.fail('invalid resource properties: %s' % str(e))
             return False
 
     def set_attribute(self, name, value):

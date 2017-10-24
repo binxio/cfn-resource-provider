@@ -270,3 +270,9 @@ def test_request_schema():
         'properties']['Alphabet']['default']
     assert not r['ReturnSecret']
     assert r['KeyAlias'] == 'alias/aws/ssm'
+
+    del request['ResourceProperties']['Name']
+    provider.set_request(request, {})
+    assert not provider.is_valid_request()
+    assert provider.status == 'FAILED'
+    assert provider.reason != ''
