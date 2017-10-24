@@ -87,4 +87,11 @@ AWS CloudFormation passes all properties in  string format, eg 'true', 'false', 
         except ValueError as e:
             log.error('failed to convert property types %s', e)
 
-it is ok if you cannot convert the values: the validator will report the error for you :-) If I find out how, I will do a generic implementation based on your json schema.
+it is ok if you cannot convert the values: the validator will report the error for you :-) 
+
+Alternatively, you may use the `heuristic_convert_property_types` method::
+
+   def convert_property_types(self):
+        self.heuristic_convert_property_types(self, self.properties)
+
+it will convert all integer strings to int type, and 'true' and 'false' strings to a boolean type. Recurses through your dictionary.

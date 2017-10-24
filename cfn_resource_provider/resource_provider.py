@@ -10,6 +10,15 @@ from cfn_resource_provider import default_injecting_validator
 log = logging.getLogger()
 
 
+def is_int(s):
+    """
+    returns true, if the string is a proper decimal integer value
+    """
+    if s[0] in ('-', '+'):
+        return s[1:].isdigit()
+    return s.isdigit()
+
+
 class ResourceProvider(object):
     """
     Custom CloudFormation Resource Provider. Just
@@ -26,7 +35,6 @@ class ResourceProvider(object):
         default json schema for request['ResourceProperties']. Override in your subclass.
         """
         self.request_schema = {'type': 'object'}
-
 
     @property
     def custom_cfn_resource_name(self):
@@ -154,13 +162,31 @@ class ResourceProvider(object):
             return False
 
     def convert_property_types(self):
-	"""
-	allows you to coerce the values in properties to be the type expected. Stupid CFN sends all values as Strings..
-	it is called before the json schema validation takes place.
+        """
+        allows you to coerce the values in properties to be the type expected. Stupid CFN sends all values as Strings..
+        it is called before the json schema validation takes place.
 
-	one day we will make it a generic method, not now...
-	"""
-	pass
+        one day we will make it a generic method, not now...
+        """
+        pass
+
+    def heuristic_convert_property_types(self, properties):
+        """
+        heuristic type conversion of string values in `properties`.
+        """
+        for name in properties:
+            if isinstance(properties[name], dict):
+                self.heuristic_convert_property_types(properties[name])
+            elif isinstance(properties[name], (str, unicode)):
+                v = str(properties[name])
+                if v == 'true':
+                    properties[name] = True
+                elif v == 'false':
+                    properties[name] = False
+                elif is_int(v):
+                    properties[name] = int(v)
+                else:
+                    pass  # leave it a string.
 
     def is_valid_request(self):
         """
@@ -169,7 +195,7 @@ class ResourceProvider(object):
         If false, self.reason and self.status are set.
         """
         try:
-	    self.convert_property_types()
+            self.convert_property_types()
             default_injecting_validator.validate(self.properties, self.request_schema)
             return True
         except jsonschema.ValidationError as e:

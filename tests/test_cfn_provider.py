@@ -189,11 +189,51 @@ def test_delete():
     assert provider.reason.startswith('delete not implemented')
 
 
+def test_heuristic_convert_property_types():
+    provider = ResourceProvider()
+    v = {'integer': '131', 'negative': '-123', 'positive': '+123',
+         'true': 'true', 'false': 'false', 'badint': '1231n'}
+    provider.heuristic_convert_property_types(v)
+
+    assert isinstance(v['integer'], int)
+    assert v['integer'] == 131
+    assert isinstance(v['negative'], int)
+    assert v['negative'] == -123
+    assert isinstance(v['positive'], int)
+    assert v['positive'] == 123
+    assert isinstance(v['true'], bool)
+    assert v['true']
+    assert isinstance(v['false'], bool)
+    assert not v['false']
+    assert isinstance(v['badint'], str)
+    assert v['badint'] == '1231n'
+
+    v = {'ints': {'integer': '131', 'negative': '-123', 'positive': '+123'},
+         'bools': {'true': 'true', 'false': 'false'},
+         'badint': '1231n'}
+
+    provider.heuristic_convert_property_types(v)
+
+    assert isinstance(v['ints']['integer'], int)
+    assert v['ints']['integer'] == 131
+    assert isinstance(v['ints']['negative'], int)
+    assert v['ints']['negative'] == -123
+    assert isinstance(v['ints']['positive'], int)
+    assert v['ints']['positive'] == 123
+    assert isinstance(v['bools']['true'], bool)
+    assert v['bools']['true']
+    assert isinstance(v['bools']['false'], bool)
+    assert not v['bools']['false']
+    assert isinstance(v['badint'], str)
+    assert v['badint'] == '1231n'
+
+
 def test_request_schema():
     class TestSecretProvider(ResourceProvider):
         """
         test provider
         """
+
         def __init__(self):
             super(TestSecretProvider, self).__init__()
             self.request_schema = {
@@ -218,7 +258,6 @@ def test_request_schema():
         def delete(self):
             pass
 
-    
     provider = TestSecretProvider()
     request = Request('Create', 'bla', 's')
     request['ResourceType'] = 'Custom::TestSecret'
@@ -231,4 +270,3 @@ def test_request_schema():
         'properties']['Alphabet']['default']
     assert not r['ReturnSecret']
     assert r['KeyAlias'] == 'alias/aws/ssm'
-

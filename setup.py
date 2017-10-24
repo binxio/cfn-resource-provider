@@ -14,7 +14,8 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), 'r') as f:
     long_description = f.read()
 
-version="0.6.0"
+version = "0.6.0"
+
 
 class PyTest(TestCommand):
 
@@ -43,7 +44,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=['requests',  'jsonschema'],
+    install_requires=['requests',  'jsonschema', 'requests[security]'],
     tests_requires=['pytest'],
     cmdclass={'test': PyTest},
     tests_require=['pytest'],
