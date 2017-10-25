@@ -52,9 +52,10 @@ class ResourceProvider(object):
             'StackId': request['StackId'],
             'RequestId': request['RequestId'],
             'LogicalResourceId': request['LogicalResourceId'],
-            'PhysicalResourceId': request['PhysicalResourceId'] if 'PhysicalResourceId' in request else None,
             'Data': {}
         }
+        if 'PhysicalResourceId' in request:
+            self.response['PhysicalResourceId'] = request['PhysicalResourceId']
 
     def get(self, name, default=None):
         """
