@@ -14,7 +14,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), 'r') as f:
     long_description = f.read()
 
-version = "0.8.1"
+version = "0.8.2"
 
 
 class PyTest(TestCommand):
