@@ -92,14 +92,37 @@ def test_properties():
     assert request['ResourceProperties'] == provider.properties
 
 
+def test_old_properties():
+    request = Request('Update', 'bla', 's')
+    request['OldResourceProperties'] = {'Test': 1}
+    provider = ResourceProvider()
+    provider.set_request(request, {})
+    assert request['OldResourceProperties'] == provider.old_properties
+
+    del request['OldResourceProperties']
+    assert 'OldResourceProperties' not in request
+    assert isinstance(provider.old_properties, dict)
+    assert len(provider.old_properties) == 0
+
+
 def test_get():
     request = Request('create', 'bla', 's')
-    request['ResourceProperties']['Test'] = '123'
+    request['ResourceProperties'] = {'Test': '123'}
     provider = ResourceProvider()
     provider.set_request(request, {})
     assert provider.get('Test') == '123'
     assert provider.get('Notthere') is None
     assert provider.get('Notthere', 'mooi') == 'mooi'
+
+
+def test_get_old():
+    request = Request('Update', 'bla', 's')
+    request['OldResourceProperties'] = {'Test': 2}
+    provider = ResourceProvider()
+    provider.set_request(request, {})
+    assert provider.get_old('Test') == 2
+    assert provider.get_old('Notthere') is None
+    assert provider.get_old('Notthere', 'mooi') == 'mooi'
 
 
 def test_physical_resource_id():

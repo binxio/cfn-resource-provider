@@ -63,12 +63,25 @@ class ResourceProvider(object):
         """
         return self.properties[name] if name in self.properties else default
 
+    def get_old(self, name, default=None):
+        """
+        returns the old resource property `name` if it exists, otherwise `default`
+        """
+        return self.old_properties[name] if name in self.old_properties else default
+
     @property
     def properties(self):
         """
         returns the custom resource properties from the request.
         """
         return self.request['ResourceProperties']
+
+    @property
+    def old_properties(self):
+        """
+        returns the old custom resource properties from the request, if available.
+        """
+        return self.request['OldResourceProperties'] if 'OldResourceProperties' in self.request else {}
 
     @property
     def logical_resource_id(self):
