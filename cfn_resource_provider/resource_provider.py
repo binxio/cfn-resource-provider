@@ -116,7 +116,7 @@ class ResourceProvider(object):
         """
         returns the PhysicalResourceId from the response. Initialized from request.
         """
-        return self.response['PhysicalResourceId']
+        return self.response['PhysicalResourceId'] if 'PhysicalResourceId' in self.response else None
 
     @physical_resource_id.setter
     def physical_resource_id(self, new_resource_id):
@@ -294,19 +294,28 @@ class ResourceProvider(object):
         """
         handles the CloudFormation request.
         """
-        log.debug('received request %s', json.dumps(request))
-        self.set_request(request, context)
-        self.execute()
-        self.send_response()
+        try:
+            log.debug('received request %s', json.dumps(request))
+            self.set_request(request, context)
+            self.execute()
+            self.is_valid_cfn_response()
+        except Exception as e:
+            if self.request_type == 'Create' and self.physical_resource_id is None:
+                self.physical_resource_id = 'could-not-create'
+            if self.status == 'SUCCESS':
+                self.fail(str(e))
+            log.exception("exception occurred processing the request")
+        finally:
+            self.send_response()
+
         return self.response
 
     def send_response(self):
         """
         sends the response to `ResponseURL`
         """
-        self.is_valid_cfn_response()
         url = self.request['ResponseURL']
-        log.debug('sending response to %s request %s',
+        log.debug('sending response to %s ->  %s',
                   url, json.dumps(self.response))
         r = requests.put(url, json=self.response)
         if r.status_code != 200:
