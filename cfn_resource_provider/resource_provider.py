@@ -14,10 +14,9 @@ def is_int(s):
     """
     returns true, if the string is a proper decimal integer value
     """
-    if s[0] in ('-', '+'):
+    if len(s) > 0 and s[0] in ('-', '+'):
         return s[1:].isdigit()
     return s.isdigit()
-
 
 class ResourceProvider(object):
     """
