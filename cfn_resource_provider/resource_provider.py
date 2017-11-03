@@ -18,6 +18,7 @@ def is_int(s):
         return s[1:].isdigit()
     return s.isdigit()
 
+
 class ResourceProvider(object):
     """
     Custom CloudFormation Resource Provider. Just
@@ -285,6 +286,8 @@ class ResourceProvider(object):
             else:
                 assert self.request_type == 'Delete'
                 self.delete()
+
+            self.is_valid_cfn_response()
         elif self.request_type == 'Delete':
             # failure to delete an invalid request hangs your cfn...
             self.success()
@@ -297,7 +300,6 @@ class ResourceProvider(object):
             log.debug('received request %s', json.dumps(request))
             self.set_request(request, context)
             self.execute()
-            self.is_valid_cfn_response()
         except Exception as e:
             if self.request_type == 'Create' and self.physical_resource_id is None:
                 self.physical_resource_id = 'could-not-create'
