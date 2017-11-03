@@ -215,8 +215,10 @@ def test_delete():
 def test_heuristic_convert_property_types():
     provider = ResourceProvider()
     v = {'integer': '131', 'negative': '-123', 'positive': '+123',
-         'true': 'true', 'false': 'false', 'badint': '1231n'}
+         'true': 'true', 'false': 'false', 'badint': '1231n', 'emptystring': ''}
     provider.heuristic_convert_property_types(v)
+
+    assert isinstance(v['emptystring'], (str, unicode))
 
     assert isinstance(v['integer'], int)
     assert v['integer'] == 131
