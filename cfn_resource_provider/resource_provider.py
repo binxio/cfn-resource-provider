@@ -316,7 +316,8 @@ class ResourceProvider(object):
         url = self.request['ResponseURL']
         log.debug('sending response to %s ->  %s',
                   url, json.dumps(self.response))
-        r = requests.put(url, json=self.response)
+        headers = {'Content-type': ''}
+        r = requests.put(url, json=self.response, headers=headers)
         if r.status_code != 200:
             raise Exception('failed to put the response to %s status code %d, %s' %
                             (url, r.status_code, r.text))
