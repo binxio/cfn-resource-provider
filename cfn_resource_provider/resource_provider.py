@@ -40,6 +40,9 @@ class ResourceProvider(object):
     def custom_cfn_resource_name(self):
         return 'Custom::%s' % self.__class__.__name__.replace('Provider', '')
 
+    def is_supported_resource_type(self):
+        return self.resource_type == self.custom_cfn_resource_name
+
     def set_request(self, request, context):
         """
         sets the lambda request to process.
@@ -216,6 +219,17 @@ class ResourceProvider(object):
             self.fail('invalid resource properties: %s' % str(e))
             return False
 
+    def is_supported_request(self):
+        """
+        returns true if request is `is_supported_resource_type`.
+        If false, self.reason and self.status are set.
+        """
+        supported = self.is_supported_resource_type()
+        if not supported:
+            self.fail('ResourceType %s not supported by provider %s' %
+                      (self.resource_type, self.custom_cfn_resource_name))
+        return supported
+
     def set_attribute(self, name, value):
         """
         sets the attribute `name` to `value`. This value can be retrieved using "Fn::GetAtt".
@@ -265,20 +279,7 @@ class ResourceProvider(object):
         """
         execute the request.
         """
-        if not self.is_valid_cfn_request():
-            if 'RequestType' in self.request and self.request_type == 'Delete':
-                self.success()
-            return
-
-        if self.resource_type != self.custom_cfn_resource_name:
-            self.fail('ResourceType %s not supported by provider %s' %
-                      (self.resource_type, self.custom_cfn_resource_name))
-            if self.request_type == 'Delete':
-                # failure to delete an invalid request hangs your cfn...
-                self.success()
-            return
-
-        if self.is_valid_request():
+        if self.is_valid_cfn_request() and self.is_valid_request() and self.is_supported_request():
             if self.request_type == 'Create':
                 self.create()
             elif self.request_type == 'Update':
@@ -288,7 +289,7 @@ class ResourceProvider(object):
                 self.delete()
 
             self.is_valid_cfn_response()
-        elif self.request_type == 'Delete':
+        elif 'RequestType' in self.request and self.request_type == 'Delete':
             # failure to delete an invalid request hangs your cfn...
             self.success()
 

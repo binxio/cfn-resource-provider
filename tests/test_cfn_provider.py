@@ -62,6 +62,16 @@ def test_custom_cfn_resource_name():
     assert provider.custom_cfn_resource_name == 'Custom::Secret'
 
 
+def test_is_supported_resource_type():
+    provider = ResourceProvider()
+    request = Request('Create', 'bla', 's')
+    request['ResourceType'] = 'Custom::Secret'
+    provider.set_request(request, {})
+    assert provider.is_valid_cfn_request(), provider.reason
+    assert provider.is_valid_request(), provider.reason
+    assert not provider.is_supported_request(), provider.reason
+
+
 def test_set_request():
     provider = ResourceProvider()
     request = Request('Create', 'bla', 's')
