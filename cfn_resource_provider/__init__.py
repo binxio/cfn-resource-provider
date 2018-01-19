@@ -1,3 +1,1 @@
-import resource_provider
-
-ResourceProvider = resource_provider.ResourceProvider
+from .resource_provider  import ResourceProvider

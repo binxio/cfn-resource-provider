@@ -1,4 +1,5 @@
 from __future__ import generators
+from past.builtins import basestring
 import os
 import requests
 import logging
@@ -194,7 +195,7 @@ class ResourceProvider(object):
         for name in properties:
             if isinstance(properties[name], dict):
                 self.heuristic_convert_property_types(properties[name])
-            elif isinstance(properties[name], (str, unicode)):
+            elif isinstance(properties[name], basestring):
                 v = str(properties[name])
                 if v == 'true':
                     properties[name] = True
