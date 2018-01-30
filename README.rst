@@ -92,6 +92,6 @@ it is ok if you cannot convert the values: the validator will report the error f
 Alternatively, you may use the `heuristic_convert_property_types` method::
 
    def convert_property_types(self):
-        self.heuristic_convert_property_types(self, self.properties)
+        self.heuristic_convert_property_types(self.properties)
 
 it will convert all integer strings to int type, and 'true' and 'false' strings to a boolean type. Recurses through your dictionary.
