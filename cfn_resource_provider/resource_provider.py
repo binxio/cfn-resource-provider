@@ -163,7 +163,7 @@ class ResourceProvider(object):
             jsonschema.validate(self.request, self.cfn_request_schema)
             return True
         except jsonschema.ValidationError as e:
-            self.fail('invalid CloudFormation Request received: %s' % str(e))
+            self.fail('invalid CloudFormation Request received: %s' % str(e.context))
             return False
 
     def is_valid_cfn_response(self):
