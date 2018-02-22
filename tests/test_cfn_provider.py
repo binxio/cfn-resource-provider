@@ -44,7 +44,7 @@ def test_is_valid_cfn_request():
 def test_is_valid_cfn_response():
     provider = ResourceProvider()
     provider.set_request(Request('Create', 'bla', 's'), {})
-    assert provider.is_valid_cfn_response(),  provider.reason
+    assert provider.is_valid_cfn_response(), provider.reason
     assert provider.status == 'SUCCESS'
     assert provider.reason == ''
     assert provider.physical_resource_id
@@ -86,7 +86,7 @@ def test_set_request():
     assert provider.request['StackId'] == provider.response['StackId']
     assert provider.request['RequestId'] == provider.response['RequestId']
     assert provider.request[
-        'LogicalResourceId'] == provider.response['LogicalResourceId']
+               'LogicalResourceId'] == provider.response['LogicalResourceId']
     assert provider.request['PhysicalResourceId'] == provider.response[
         'PhysicalResourceId']
     assert provider.logical_resource_id == provider.request[
@@ -145,7 +145,7 @@ def test_physical_resource_id():
     assert provider.physical_resource_id == new_resource_id
     assert provider.response['PhysicalResourceId'] == new_resource_id
     assert provider.request[
-        'PhysicalResourceId'] != provider.physical_resource_id
+               'PhysicalResourceId'] != provider.physical_resource_id
 
 
 def test_set_attribute():
@@ -223,6 +223,23 @@ def test_delete():
     assert provider.reason.startswith('delete not implemented')
 
 
+def test_no_echo():
+    request = Request('Delete', 'bla', 's')
+    provider = ResourceProvider()
+    provider.set_request(request, {})
+    assert provider.no_echo == None
+    provider.no_echo = True
+    assert provider.no_echo == True
+    provider.no_echo = False
+    assert provider.no_echo == False
+
+    try:
+        provider.no_echo = 'true'
+        assert False, 'no_echo set to non boolean'
+    except AssertionError as e:
+        pass
+
+
 def test_heuristic_convert_property_types():
     provider = ResourceProvider()
     v = {'integer': '131', 'negative': '-123', 'positive': '+123',
@@ -281,7 +298,7 @@ def test_request_schema():
                     "Alphabet": {"type": "string", "default": "abcdfghijklmnopqrstuvwyxz"},
                     "ReturnSecret": {"type": "boolean", "default": False},
                     "KeyAlias": {"type": "string", "default": "alias/aws/ssm"},
-                    "Length": {"type": "integer",  "default": 30}
+                    "Length": {"type": "integer", "default": 30}
                 }
             }
 

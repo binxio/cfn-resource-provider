@@ -154,6 +154,22 @@ class ResourceProvider(object):
         """
         return self.request['ResourceType']
 
+    @property
+    def no_echo(self):
+        """
+        returns the current value of NoEcho, or None if not set.
+        """
+        return self.response.get('NoEcho', None)
+
+    @no_echo.setter
+    def no_echo(self, value):
+        """
+        sets the NoEcho in the response to `value`.
+        """
+        assert isinstance(value, bool)
+        self.response['NoEcho'] = value
+
+
     def is_valid_cfn_request(self):
         """
         returns true when self.request is a valid CloudFormation custom resource request, otherwise false.
