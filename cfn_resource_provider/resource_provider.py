@@ -140,6 +140,10 @@ class ResourceProvider(object):
         """
         return self.response['Reason']
 
+    @reason.setter
+    def set_reason(self, value):
+        self.response['Reason'] = value
+        
     @property
     def status(self):
         """
@@ -147,6 +151,11 @@ class ResourceProvider(object):
         """
         return self.response['Status']
 
+    @status.setter
+    def set_status(self, value):
+        assert (value == 'FAILED' or value == 'SUCCESS')
+        self.response['Status'] = value
+        
     @property
     def resource_type(self):
         """
