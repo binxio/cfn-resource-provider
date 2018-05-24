@@ -328,4 +328,4 @@ def test_request_schema():
     provider.set_request(request, {})
     assert not provider.is_valid_request()
     assert provider.status == 'FAILED'
-    assert provider.reason != ''
+    assert provider.reason == 'invalid resource properties: \'Name\' is a required property'
