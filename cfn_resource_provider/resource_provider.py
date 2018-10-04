@@ -32,7 +32,7 @@ class ResourceProvider(object):
         self.request = None
         self.response = None
         self.context = None
-        self.async = False
+        self.asynchronous = False
         """
         default json schema for request['ResourceProperties']. Override in your subclass.
         """
@@ -51,7 +51,7 @@ class ResourceProvider(object):
         """
         self.request = request
         self.context = context
-        self.async = False
+        self.asynchronous = False
         self.response = {
             'Status': 'SUCCESS',
             'Reason': '',
@@ -203,7 +203,7 @@ class ResourceProvider(object):
                 self.response, ResourceProvider.cfn_response_schema)
             return True
         except jsonschema.ValidationError as e:
-            log.warn('invalid CloudFormation response created: %s', str(e))
+            log.warning('invalid CloudFormation response created: %s', str(e))
             return False
 
     def convert_property_types(self):
@@ -336,7 +336,7 @@ class ResourceProvider(object):
                 self.fail(str(e))
             log.exception("exception occurred processing the request")
         finally:
-            if not self.async:
+            if not self.asynchronous:
                 self.send_response()
 
         return self.response
