@@ -22,7 +22,7 @@ def is_int(s):
 
 class ResourceProvider(object):
     """
-    Custom CloudFormation Resource Provider. Just
+    Custom CloudFormation Resource Provider.
     """
 
     def __init__(self):
@@ -32,6 +32,7 @@ class ResourceProvider(object):
         self.request = None
         self.response = None
         self.context = None
+        self.async = False
         """
         default json schema for request['ResourceProperties']. Override in your subclass.
         """
@@ -50,6 +51,7 @@ class ResourceProvider(object):
         """
         self.request = request
         self.context = context
+        self.async = False
         self.response = {
             'Status': 'SUCCESS',
             'Reason': '',
@@ -334,7 +336,8 @@ class ResourceProvider(object):
                 self.fail(str(e))
             log.exception("exception occurred processing the request")
         finally:
-            self.send_response()
+            if not self.async:
+                self.send_response()
 
         return self.response
 
