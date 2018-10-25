@@ -358,7 +358,7 @@ class ResourceProvider(object):
     """
     cfn_response_schema = {
         "required": ["Status", "Reason", "RequestId", "StackId",
-                     "LogicalResourceId", "PhysicalResourceId", "Data"],
+                     "LogicalResourceId", "Data"],
         "properties": {
             "Status": {"type": "string", "enum": ["SUCCESS", "FAILED"]},
             "StackId": {"type": "string"},
