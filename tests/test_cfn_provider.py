@@ -280,6 +280,20 @@ def test_heuristic_convert_property_types():
     assert isinstance(v['badint'], str)
     assert v['badint'] == '1231n'
 
+def test_heuristic_convert_property_types_arrays():
+    provider = ResourceProvider()
+
+    v = {'ints': ['131', '-123', '+123'],
+         'bools': ['true', 'false'],
+         'dictarray': [ {'port': '80', 'enabled': 'true' }]
+        }
+    provider.heuristic_convert_property_types(v)
+    e = {'ints': [131, -123, 123],
+         'bools': [True, False],
+         'dictarray': [ {'port': 80, 'enabled': True }]
+         }
+    assert v == e
+
 
 def test_request_schema():
     class TestSecretProvider(ResourceProvider):

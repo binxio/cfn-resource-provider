@@ -219,19 +219,23 @@ class ResourceProvider(object):
         """
         heuristic type conversion of string values in `properties`.
         """
-        for name in properties:
-            if isinstance(properties[name], dict):
-                self.heuristic_convert_property_types(properties[name])
-            elif isinstance(properties[name], basestring):
-                v = str(properties[name])
-                if v == 'true':
-                    properties[name] = True
-                elif v == 'false':
-                    properties[name] = False
-                elif is_int(v):
-                    properties[name] = int(v)
-                else:
-                    pass  # leave it a string.
+        if isinstance(properties, dict):
+           for name in properties:
+               properties[name] = self.heuristic_convert_property_types(properties[name])
+        elif isinstance(properties, list):
+            for i,v in enumerate(properties):
+              properties[i] = self.heuristic_convert_property_types(v)
+        elif isinstance(properties, basestring):
+            v = str(properties)
+            if v == 'true':
+                return True
+            elif v == 'false':
+                return False
+            elif is_int(v):
+                return int(v)
+            else:
+                pass
+        return properties
 
     def is_valid_request(self):
         """
