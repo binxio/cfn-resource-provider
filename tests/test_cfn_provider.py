@@ -1,39 +1,37 @@
-import sys
-import uuid
-from past.builtins import basestring
+from uuid import uuid4
+
 from cfn_resource_provider import ResourceProvider
-from jsonschema import validate, ValidationError
 
 
 class Request(dict):
 
-    def __init__(self, request_type, name, physical_resource_id=uuid.uuid4()):
+    def __init__(self, request_type, name, physical_resource_id=None):
         self.update({
             'RequestType': request_type,
             'ResponseURL': 'https://httpbin.org/put',
             'StackId': 'arn:aws:cloudformation:us-west-2:EXAMPLE/stack-name/guid',
-            'RequestId': 'request-%s' % uuid.uuid4(),
+            'RequestId': 'request-%s' % uuid4(),
             'ResourceType': 'Custom::Resource',
-            'LogicalResourceId': 'MySecret',
-            'PhysicalResourceId': physical_resource_id,
+            'LogicalResourceId': 'MyCustomResource',
             'ResourceProperties': {
                 'Name': name
             }})
+        if physical_resource_id:
+            self['PhysicalResourceId'] = physical_resource_id
 
 
 def test_is_valid_cfn_request():
     provider = ResourceProvider()
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     provider.set_request(request, {})
     assert provider.is_valid_cfn_request(), provider.reason
-    assert provider.stack_id == request['StackId']
     assert provider.request_id == request['RequestId']
     assert provider.response_url == request['ResponseURL']
     assert provider.status == 'SUCCESS'
     assert provider.status == provider.response['Status']
     assert provider.reason == provider.response['Reason']
 
-    provider.set_request(Request('create', 'bla', 's'), {})
+    provider.set_request(Request('create', 'bla', str(uuid4())), {})
     assert not provider.is_valid_cfn_request()
     assert provider.status == 'FAILED'
     assert provider.reason != ''
@@ -43,7 +41,7 @@ def test_is_valid_cfn_request():
 
 def test_is_valid_cfn_response():
     provider = ResourceProvider()
-    provider.set_request(Request('Create', 'bla', 's'), {})
+    provider.set_request(Request('Create', 'bla', str(uuid4())), {})
     assert provider.is_valid_cfn_response(), provider.reason
     assert provider.status == 'SUCCESS'
     assert provider.reason == ''
@@ -65,7 +63,7 @@ def test_custom_cfn_resource_name():
 
 def test_is_supported_resource_type():
     provider = ResourceProvider()
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     request['ResourceType'] = 'Custom::Secret'
     provider.set_request(request, {})
     assert provider.is_valid_cfn_request(), provider.reason
@@ -75,7 +73,7 @@ def test_is_supported_resource_type():
 
 def test_set_request():
     provider = ResourceProvider()
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     context = {'bla': 'bla'}
     provider.set_request(request, context)
     assert provider.request == request
@@ -97,14 +95,14 @@ def test_set_request():
 
 
 def test_properties():
-    request = Request('create', 'bla', 's')
+    request = Request('create', 'bla', str(uuid4()))
     provider = ResourceProvider()
     provider.set_request(request, {})
     assert request['ResourceProperties'] == provider.properties
 
 
 def test_old_properties():
-    request = Request('Update', 'bla', 's')
+    request = Request('Update', 'bla', str(uuid4()))
     request['OldResourceProperties'] = {'Test': 1}
     provider = ResourceProvider()
     provider.set_request(request, {})
@@ -117,7 +115,7 @@ def test_old_properties():
 
 
 def test_get():
-    request = Request('create', 'bla', 's')
+    request = Request('create', 'bla', str(uuid4()))
     request['ResourceProperties'] = {'Test': '123'}
     provider = ResourceProvider()
     provider.set_request(request, {})
@@ -127,7 +125,7 @@ def test_get():
 
 
 def test_get_old():
-    request = Request('Update', 'bla', 's')
+    request = Request('Update', 'bla', str(uuid4()))
     request['OldResourceProperties'] = {'Test': 2}
     provider = ResourceProvider()
     provider.set_request(request, {})
@@ -137,7 +135,7 @@ def test_get_old():
 
 
 def test_physical_resource_id():
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     provider = ResourceProvider()
     provider.set_request(request, {})
     new_resource_id = 'AAAAAAAAAAAAAAAA'
@@ -149,7 +147,7 @@ def test_physical_resource_id():
 
 
 def test_set_attribute():
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     provider = ResourceProvider()
     provider.set_request(request, {})
     provider.set_attribute('Secret', '123132')
@@ -159,7 +157,7 @@ def test_set_attribute():
 
 
 def test_success():
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     provider = ResourceProvider()
     provider.set_request(request, {})
     provider.success('yeah!')
@@ -174,17 +172,37 @@ def test_success():
 
 
 def test_invalid_type_create():
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     request['ResourceType'] = 'Custom::Secret'
     provider = ResourceProvider()
     provider.set_request(request, {})
     provider.execute()
+    assert provider.physical_resource_id
     assert provider.status == 'FAILED'
     assert provider.reason == 'ResourceType Custom::Secret not supported by provider Custom::Resource'
 
+def test_exception_on_create():
+    class CrashProvider(ResourceProvider):
+
+        def __init__(self):
+            super(CrashProvider, self).__init__()
+
+        def create(self):
+            raise ValueError("does not work")
+
+    provider = CrashProvider()
+    request = Request('Create', 'bla')
+    request['ResourceType'] = 'Custom::Crash'
+    provider.set_request(request, {})
+    provider.execute()
+    assert provider.status == 'FAILED'
+    assert provider.physical_resource_id == 'could-not-create'
+    assert provider.reason == 'does not work'
+
+
 
 def test_invalid_type_delete():
-    request = Request('Delete', 'bla', 's')
+    request = Request('Delete', 'bla', str(uuid4()))
     request['ResourceType'] = 'Custom::Secret'
     provider = ResourceProvider()
     provider.set_request(request, {})
@@ -194,27 +212,29 @@ def test_invalid_type_delete():
 
 
 def test_create():
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     provider = ResourceProvider()
     request['ResourceType'] == provider.custom_cfn_resource_name
     provider.set_request(request, {})
     provider.execute()
+    assert provider.physical_resource_id
     assert provider.status == 'FAILED'
     assert provider.reason.startswith('create not implemented')
 
 
 def test_update():
-    request = Request('Update', 'bla', 's')
+    request = Request('Update', 'bla', str(uuid4()))
     provider = ResourceProvider()
     request['ResourceType'] == provider.custom_cfn_resource_name
     provider.set_request(request, {})
     provider.execute()
+    assert provider.physical_resource_id
     assert provider.status == 'FAILED'
     assert provider.reason.startswith('update not implemented')
 
 
 def test_delete():
-    request = Request('Delete', 'bla', 's')
+    request = Request('Delete', 'bla', str(uuid4()))
     provider = ResourceProvider()
     request['ResourceType'] == provider.custom_cfn_resource_name
     provider.set_request(request, {})
@@ -224,7 +244,7 @@ def test_delete():
 
 
 def test_no_echo():
-    request = Request('Delete', 'bla', 's')
+    request = Request('Delete', 'bla', str(uuid4()))
     provider = ResourceProvider()
     provider.set_request(request, {})
     assert provider.no_echo == None
@@ -246,7 +266,7 @@ def test_heuristic_convert_property_types():
          'true': 'true', 'false': 'false', 'badint': '1231n', 'emptystring': u''}
     provider.heuristic_convert_property_types(v)
 
-    assert isinstance(v['emptystring'], basestring)
+    assert isinstance(v['emptystring'], str)
 
     assert isinstance(v['integer'], int)
     assert v['integer'] == 131
@@ -326,7 +346,7 @@ def test_request_schema():
             pass
 
     provider = TestSecretProvider()
-    request = Request('Create', 'bla', 's')
+    request = Request('Create', 'bla', str(uuid4()))
     request['ResourceType'] = 'Custom::TestSecret'
     provider.set_request(request, {})
     assert provider.is_valid_request()

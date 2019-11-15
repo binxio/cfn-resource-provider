@@ -311,37 +311,40 @@ class ResourceProvider(object):
         """
         execute the request.
         """
-        if self.is_valid_cfn_request() and self.is_valid_request() and self.is_supported_request():
-            if self.request_type == 'Create':
-                self.create()
-            elif self.request_type == 'Update':
-                self.update()
-            else:
-                assert self.request_type == 'Delete'
-                self.delete()
+        try:
+            if self.is_valid_cfn_request() and self.is_valid_request() and self.is_supported_request():
+                if self.request_type == 'Create':
+                    self.create()
+                elif self.request_type == 'Update':
+                    self.update()
+                else:
+                    assert self.request_type == 'Delete'
+                    self.delete()
 
-            self.is_valid_cfn_response()
-        elif 'RequestType' in self.request and self.request_type == 'Delete':
-            # failure to delete an invalid request hangs your cfn...
-            self.success()
+                self.is_valid_cfn_response()
+            elif 'RequestType' in self.request and self.request_type == 'Delete':
+                # failure to delete an invalid request hangs your cfn...
+                self.success()
+        except Exception as e:
+            if self.status == 'SUCCESS':
+                self.fail(str(e))
+            log.exception("exception occurred processing the request")
+        finally:
+            if not self.physical_resource_id and self.status == 'FAILED':
+            # CFN will complain if the physical_resource_id is not set on
+            # failure to create the physical resource. :-(
+                if self.request_type == 'Create':
+                    self.physical_resource_id = 'could-not-create'
 
     def handle(self, request, context):
         """
         handles the CloudFormation request.
         """
-        try:
-            log.debug('received request %s', json.dumps(request))
-            self.set_request(request, context)
-            self.execute()
-        except Exception as e:
-            if self.request_type == 'Create' and self.physical_resource_id is None:
-                self.physical_resource_id = 'could-not-create'
-            if self.status == 'SUCCESS':
-                self.fail(str(e))
-            log.exception("exception occurred processing the request")
-        finally:
-            if not self.asynchronous:
-                self.send_response()
+        log.debug('received request %s', json.dumps(request))
+        self.set_request(request, context)
+        self.execute()
+        if not self.asynchronous:
+            self.send_response()
 
         return self.response
 
