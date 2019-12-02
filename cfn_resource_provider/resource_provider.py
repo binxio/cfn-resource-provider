@@ -312,7 +312,7 @@ class ResourceProvider(object):
         execute the request.
         """
         try:
-            if self.is_valid_cfn_request() and self.is_valid_request() and self.is_supported_request():
+            if self.is_supported_request() and self.is_valid_cfn_request() and self.is_valid_request():
                 if self.request_type == 'Create':
                     self.create()
                 elif self.request_type == 'Update':
