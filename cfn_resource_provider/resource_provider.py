@@ -1,5 +1,4 @@
 from __future__ import generators
-from past.builtins import basestring
 import os
 import requests
 import logging
@@ -225,7 +224,7 @@ class ResourceProvider(object):
         elif isinstance(properties, list):
             for i,v in enumerate(properties):
               properties[i] = self.heuristic_convert_property_types(v)
-        elif isinstance(properties, basestring):
+        elif isinstance(properties, str):
             v = str(properties)
             if v == 'true':
                 return True
@@ -248,7 +247,8 @@ class ResourceProvider(object):
             default_injecting_validator.validate(self.properties, self.request_schema)
             return True
         except jsonschema.ValidationError as e:
-            self.fail('invalid resource properties: %s' % e.message)
+            message = e.message.replace(str(e.instance), "<instance>") if isinstance(e.instance, dict) else e.message
+            self.fail('invalid resource properties: %s' % message)
             return False
 
     def is_supported_request(self):
