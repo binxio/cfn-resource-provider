@@ -1,11 +1,14 @@
 from __future__ import generators
-import os
-import sys
-import requests
-import logging
+
 import json
-import jsonschema
+import logging
+import sys
 import traceback
+from time import sleep
+
+import boto3
+import jsonschema
+import requests
 
 from cfn_resource_provider import default_injecting_validator
 
@@ -63,6 +66,20 @@ class ResourceProvider(object):
         }
         if 'PhysicalResourceId' in request:
             self.response['PhysicalResourceId'] = request['PhysicalResourceId']
+
+    # 25 seconds gives the function a good chance of responding before the 60 second CF retry
+    READY_SLEEP_SECONDS = 25  # in seconds
+    # if Lambda will timeout in less than MIN_TIME_BEFORE_TIMEOUT seconds, the async Lambda recall will be used
+    MIN_SECONDS_BEFORE_TIMEOUT = READY_SLEEP_SECONDS * 3
+
+    @property
+    def attempt(self):
+        """ returns the number of attempts waiting for completion """
+        return int(self.get("Attempt", 1))
+
+    def increment_attempt(self):
+        """ returns the number of attempts waiting for completion """
+        self.properties["Attempt"] = self.attempt + 1
 
     def get(self, name, default=None):
         """
@@ -155,7 +172,7 @@ class ResourceProvider(object):
         return self.response['Status']
 
     @status.setter
-    def set_status(self, value):
+    def status(self, value):
         assert (value == 'FAILED' or value == 'SUCCESS')
         self.response['Status'] = value
         
@@ -180,7 +197,6 @@ class ResourceProvider(object):
         """
         assert isinstance(value, bool)
         self.response['NoEcho'] = value
-
 
     def is_valid_cfn_request(self):
         """
@@ -221,11 +237,11 @@ class ResourceProvider(object):
         heuristic type conversion of string values in `properties`.
         """
         if isinstance(properties, dict):
-           for name in properties:
-               properties[name] = self.heuristic_convert_property_types(properties[name])
+            for name in properties:
+                properties[name] = self.heuristic_convert_property_types(properties[name])
         elif isinstance(properties, list):
-            for i,v in enumerate(properties):
-              properties[i] = self.heuristic_convert_property_types(v)
+            for i, v in enumerate(properties):
+                properties[i] = self.heuristic_convert_property_types(v)
         elif isinstance(properties, str):
             v = str(properties)
             if v == 'true':
@@ -240,8 +256,8 @@ class ResourceProvider(object):
 
     def is_valid_request(self):
         """
-        returns true if `self.properties` is a valid request as specified by the JSON schema self.request_schema, otherwise False.
-        Optional properties with a default value in the schema will be added to self.porperties.
+        returns true if `self.properties` is a valid request as specified by the JSON schema self.request_schema,
+        otherwise False. Optional properties with a default value in the schema will be added to self.properties.
         If false, self.reason and self.status are set.
         """
         try:
@@ -280,16 +296,16 @@ class ResourceProvider(object):
         """
         sets response status to SUCCESS, with an optional reason.
         """
-        self.response['Status'] = 'SUCCESS'
+        self.status = 'SUCCESS'
         if reason is not None:
-            self.response['Reason'] = reason
+            self.reason = reason
 
     def fail(self, reason):
         """
         sets response status to FAILED
         """
-        self.response['Status'] = 'FAILED'
-        self.response['Reason'] = reason
+        self.status = 'FAILED'
+        self.reason = reason
 
     def create(self):
         """
@@ -309,9 +325,34 @@ class ResourceProvider(object):
         """
         self.success('delete not implemented by %s' % self)
 
+    def is_ready(self):
+        """
+        indicates whether the resource is ready
+        """
+        if self.request_type == 'Create':
+            return True
+        elif self.request_type == 'Update':
+            return True
+        elif self.request_type == 'Delete':
+            return True
+        else:
+            raise ValueError(f"No is_ready method for Request Type: {self.request_type}")
+
+    def async_reinvoke(self):
+        self.asynchronous = True  # do not report result to CFN yet
+        self.increment_attempt()
+        payload = json.dumps(self.request).encode("utf-8")
+        boto3.client("lambda").invoke(
+            FunctionName=self.get("ServiceToken"),
+            InvocationType="Event",
+            Payload=payload,
+        )
+
     def execute(self):
         """
-        execute the request.
+        Execute the request.  For a long-running request, CloudFormation will send up to 3 calls, one per minute for
+        the first 3 minutes and then wait an additional 57 minutes if no response is received (for a total of 1h)
+        before timing out and marking the request as failed.
         """
         try:
             if self.is_supported_request() and self.is_valid_cfn_request() and self.is_valid_request():
@@ -322,7 +363,15 @@ class ResourceProvider(object):
                 else:
                     assert self.request_type == 'Delete'
                     self.delete()
-
+                while not self.is_ready():
+                    assert self.MIN_SECONDS_BEFORE_TIMEOUT > self.READY_SLEEP_SECONDS * 2, 'TIMEOUT should be at least 2x ' \
+                        'SLEEP_TIME to ensure the lambda function has time to respond to the timeout test.'
+                    log.info(f"Remaining time in milliseconds:  {self.context.get_remaining_time_in_millis()}")
+                    if self.context.get_remaining_time_in_millis() < self.MIN_SECONDS_BEFORE_TIMEOUT * 1000:
+                        log.warning('timeout reached.  re-invoking lambda.')
+                        self.async_reinvoke()
+                        break
+                    sleep(self.READY_SLEEP_SECONDS)
                 self.is_valid_cfn_response()
             elif 'RequestType' in self.request and self.request_type == 'Delete':
                 # failure to delete an invalid request hangs your cfn...
@@ -335,8 +384,8 @@ class ResourceProvider(object):
             log.error('%s', traceback.format_exception(etype, value, tb))
         finally:
             if not self.physical_resource_id and self.status == 'FAILED':
-            # CFN will complain if the physical_resource_id is not set on
-            # failure to create the physical resource. :-(
+                # CFN will complain if the physical_resource_id is not set on
+                # failure to create the physical resource. :-(
                 if self.request_type == 'Create':
                     self.physical_resource_id = 'could-not-create'
 
