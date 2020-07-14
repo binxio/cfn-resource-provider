@@ -60,11 +60,12 @@ def test_request_exception():
     assert provider.is_valid_request()
     response = provider.handle(request, {})
     assert response['Status'] == 'FAILED', response['Reason']
-    assert response['Reason'] == 'value error during create', response['Reason']
+    assert response['Reason'] == 'ValueError: value error during create', response['Reason']
     assert response['PhysicalResourceId'] == 'could-not-create', 'a physical resource id must be present'
 
     request = Request('Update', 'bla', 'resource-id')
     request['ResourceType'] = 'Custom::TestSecret'
+
     provider.set_request(request, {})
     assert provider.is_valid_request()
     response = provider.handle(request, {})

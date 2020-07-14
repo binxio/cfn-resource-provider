@@ -1,9 +1,11 @@
 from __future__ import generators
 import os
+import sys
 import requests
 import logging
 import json
 import jsonschema
+import traceback
 
 from cfn_resource_provider import default_injecting_validator
 
@@ -325,10 +327,12 @@ class ResourceProvider(object):
             elif 'RequestType' in self.request and self.request_type == 'Delete':
                 # failure to delete an invalid request hangs your cfn...
                 self.success()
-        except Exception as e:
+        except Exception:
+            etype, value, tb = sys.exc_info()
+            s = ''.join(traceback.format_exception_only(etype, value)).rstrip()
             if self.status == 'SUCCESS':
-                self.fail(str(e))
-            log.exception("exception occurred processing the request")
+                self.fail(s)
+            log.error('%s', traceback.format_exception(etype, value, tb))
         finally:
             if not self.physical_resource_id and self.status == 'FAILED':
             # CFN will complain if the physical_resource_id is not set on

@@ -199,7 +199,7 @@ def test_exception_on_create():
     provider.execute()
     assert provider.status == "FAILED"
     assert provider.physical_resource_id == "could-not-create"
-    assert provider.reason == "does not work"
+    assert provider.reason == "ValueError: does not work"
 
 
 def test_invalid_type_delete():
