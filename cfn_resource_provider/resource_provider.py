@@ -142,7 +142,7 @@ class ResourceProvider(object):
         return self.response['Reason']
 
     @reason.setter
-    def set_reason(self, value):
+    def reason(self, value):
         self.response['Reason'] = value
         
     @property
@@ -348,10 +348,16 @@ class ResourceProvider(object):
 
         return self.response
 
+    def _truncate_reason(self):
+        if len(self.reason) > 200:
+            log.error('truncating Reason to 200 characters to avoid exceeding the, %s', self.reason)
+            self.reason = '%.200s...' % self.reason
+
     def send_response(self):
         """
         sends the response to `ResponseURL`
         """
+        self._truncate_reason()
         url = self.request['ResponseURL']
         log.debug('sending response to %s ->  %s',
                   url, json.dumps(self.response))

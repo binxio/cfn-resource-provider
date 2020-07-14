@@ -533,3 +533,13 @@ def test_expose_request_value():
     assert "donotshowme" not in provider.reason
 
     request = Request("Create", "doesnotmatch", str(uuid4()))
+
+def test_truncate_reason():
+    provider = ResourceProvider()
+    request = Request("Create", "bla", str(uuid4()))
+    provider.set_request(request, {})
+
+    reason = '--error---' * 30
+    provider.reason = reason
+    provider._truncate_reason()
+    assert len(provider.reason) == 203, provider.reason
