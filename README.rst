@@ -53,7 +53,7 @@ After that, you only need to implement the methods `create`, `update` and `delet
                 self.physical_resource_id = 'could-not-create'
                 self.fail(str(e))
         
-        def create(self):
+        def update(self):
             ....
         
         def delete(self):
