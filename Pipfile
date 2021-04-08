@@ -7,9 +7,11 @@ verify_ssl = true
 pytest = "*"
 twine  = "*"
 cfn-resource-provider = {editable = true,path = "."}
+boto3 = {editable = true,path = "."}
 
 [packages]
 cfn-resource-provider = {editable = true,path = "."}
+boto3 = {editable = true,path = "."}
 
 [requires]
 python_version = "3.7"
