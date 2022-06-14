@@ -1,11 +1,12 @@
 from __future__ import generators
-import os
-import sys
-import requests
-import logging
+
 import json
-import jsonschema
+import logging
+import sys
 import traceback
+
+import jsonschema
+import requests
 
 from cfn_resource_provider import default_injecting_validator
 
@@ -146,7 +147,7 @@ class ResourceProvider(object):
     @reason.setter
     def reason(self, value):
         self.response['Reason'] = value
-        
+
     @property
     def status(self):
         """
@@ -158,7 +159,7 @@ class ResourceProvider(object):
     def set_status(self, value):
         assert (value == 'FAILED' or value == 'SUCCESS')
         self.response['Status'] = value
-        
+
     @property
     def resource_type(self):
         """
