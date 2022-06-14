@@ -1,0 +1,23 @@
+name: release-to-pypi
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  build:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - name: checkout
+        run: git fetch --prune --unshallow
+      - name: install environment
+        run: pip install pipenv && pipenv sync -d 
+      - name: release
+        run: make release
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSSWORD: ${{secrets.twine_password }}
