@@ -20,4 +20,4 @@ jobs:
         run: make release
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSSWORD: ${{secrets.twine_password }}
+          TWINE_PASSWORD: ${{ secrets.twine_password }}
