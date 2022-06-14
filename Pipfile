@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 twine  = "*"
-cfn-resource-provider = {editable = true,path = "."}
+cfn-resource-provider = {editable = true, path = "."}
 
 [packages]
 jsonschema = "*"
