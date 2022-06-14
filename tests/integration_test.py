@@ -1,7 +1,6 @@
-import sys
 import uuid
+
 from cfn_resource_provider import ResourceProvider
-from jsonschema import validate, ValidationError
 
 
 class Request(dict):
