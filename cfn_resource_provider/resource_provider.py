@@ -1,5 +1,3 @@
-from __future__ import generators
-
 import json
 import logging
 import sys

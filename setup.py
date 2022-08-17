@@ -44,7 +44,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=['requests',  'future', 'jsonschema', 'requests[security]'],
+    install_requires=['requests', 'jsonschema', 'requests[security]'],
     cmdclass={'test': PyTest},
     tests_require=['pytest'],
     author="Mark van Holsteijn",
