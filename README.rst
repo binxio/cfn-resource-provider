@@ -11,11 +11,11 @@ First, you inherit from the base class and specify a JSON schema which defines t
                     "type": "object",
                     "required": ["Name"],
                     "properties": {
-                        "Name": {"type": "string", 
+                        "Name": {"type": "string",
                                  "minLength": 1,
                                  "pattern": "[a-zA-Z0-9_/]+",
                                  "description": "the name of the value in the parameters store"},
-                        "Description": {"type": "string", 
+                        "Description": {"type": "string",
                                         "default": "",
                                         "description": "the description of the value in the parameter store"},
                         "Alphabet": {"type": "string",
@@ -27,7 +27,7 @@ First, you inherit from the base class and specify a JSON schema which defines t
                         "KeyAlias": {"type": "string",
                                      "default": "alias/aws/ssm",
                                      "description": "KMS key to use to encrypt the value"},
-                        "Length": {"type": "integer",  
+                        "Length": {"type": "integer",
                                    "minimum": 1, "maximum": 512,
                                    "default": 30,
                                    "description": "length of the secret"}
@@ -52,10 +52,10 @@ After that, you only need to implement the methods `create`, `update` and `delet
             except ClientError as e:
                 self.physical_resource_id = 'could-not-create'
                 self.fail(str(e))
-        
+
         def update(self):
             ....
-        
+
         def delete(self):
             ....
 
@@ -87,7 +87,7 @@ AWS CloudFormation passes all properties in  string format, eg 'true', 'false', 
         except ValueError as e:
             log.error('failed to convert property types %s', e)
 
-it is ok if you cannot convert the values: the validator will report the error for you :-) 
+it is ok if you cannot convert the values: the validator will report the error for you :-)
 
 Alternatively, you may use the `heuristic_convert_property_types` method::
 
@@ -95,3 +95,15 @@ Alternatively, you may use the `heuristic_convert_property_types` method::
         self.heuristic_convert_property_types(self.properties)
 
 it will convert all integer strings to int type, and 'true' and 'false' strings to a boolean type. Recurses through your dictionary.
+
+**Using SNS Backed custom resource provider**
+
+Next to AWS Lambda you can also use a SNS Topic to handle your custom resources. AWS calls these [Amazon Simple Notification Service-backed custom resources](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources-sns.html).
+When you subscribe your AWS Lambda function to this topic the `event` structure is different than when you directly invoke the Lambda function using a custom resource.
+The payload of a Lambda function that is invoked via a SNS Topic contains 1 or more events. For this reason we provide a `SnsEnvelope` class that will process each event in the event.
+
+    def handler(request, context):
+        provider = SnsEnvelope(SampleProvider)
+        requests = provider.handle(request, context)
+
+The `SampleProvider` is the same provider that you directly would use. But by passing it into the envelope class it will be used for each event in the payload.
