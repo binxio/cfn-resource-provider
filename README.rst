@@ -100,7 +100,7 @@ it will convert all integer strings to int type, and 'true' and 'false' strings 
 
 Next to AWS Lambda you can also use a SNS Topic to handle your custom resources. AWS calls these `Amazon Simple Notification Service-backed custom resources <https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources-sns.html>`_.
 When you subscribe your AWS Lambda function to this topic the `event` structure is different than when you directly invoke the Lambda function using a custom resource.
-The payload of a Lambda function that is invoked via a SNS Topic contains 1 or more events. For this reason we provide a `SnsEnvelope` class that will process each event in the event.
+The payload of a Lambda function that is invoked via a SNS Topic contains 1 or more events. For this reason we provide a `SnsEnvelope` class that will process each event in the event::
 
     def handler(request, context):
         provider = SnsEnvelope(SampleProvider)

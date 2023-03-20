@@ -1,5 +1,5 @@
 import json
-from typing import Any, List
+from typing import Any, List, Type
 
 import jsonschema
 from .resource_provider import ResourceProvider
@@ -40,7 +40,7 @@ class SnsEnvelope(object):
     it easier to process these custom resources we created an Envelope that can unpack the SNS messages.
     """
 
-    def __init__(self, resource_provider: ResourceProvider) -> None:
+    def __init__(self, resource_provider: Type[ResourceProvider]) -> None:
         self.provider = resource_provider
 
     def handle(self, event: dict, context: Any) -> List[dict]:
